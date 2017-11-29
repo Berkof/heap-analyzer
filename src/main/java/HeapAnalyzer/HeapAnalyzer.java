@@ -196,8 +196,6 @@ public class HeapAnalyzer {
         if (args.length > 3)
             HOLDING_TREE_WIDTH = Integer.parseInt(args[3]);
 
-        dumppath = "/mnt/ssd/work/gg/FD/FD-5122_memory_consumption/heap18175_s1.hprof";
-
         Heap heap = load(dumppath);
         log( "Heap loaded. Searching for biggest classes...");
 
