@@ -213,7 +213,15 @@ public class HeapAnalyzer {
             nextLvl = doStep(heap, nextLvl);
             ResultRow[] result = collectResult(nextLvl);
             printResult(result);
-            result = Arrays.copyOf(result, HOLDING_TREE_WIDTH);
+
+            // Filter ony HOLDING_TREE_WIDTH biggest paths
+            result = Arrays.copyOf(result, Math.min(result.length, HOLDING_TREE_WIDTH));
+            Map<PathKey, LongIntHashMap> nextLvlMap = new HashMap(result.length);
+            for (ResultRow rr : result) {
+                PathKey tPK = new PathKey(rr.path);
+                nextLvlMap.put(tPK, nextLvl.get(tPK));
+            }
+            nextLvl = nextLvlMap;
         }
         log("Done");
 
