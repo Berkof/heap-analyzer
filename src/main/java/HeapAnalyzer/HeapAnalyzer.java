@@ -183,6 +183,8 @@ public class HeapAnalyzer {
     }
 
     public static void main(String[] args) throws IOException {
+        // org.jetbrains.jps.model.ex.JpsElementContainerImpl
+        // java.util.concurrent.ConcurrentHashMap$Node
 
         if (args.length < 1 || args.length > 4) {
             System.out.println("Start with parameters: <path/to/dump> [<BIGGEST_CLASS_TO_ANALYSE> <HOLDING_TREE_HEIGHT> <HOLDING_TREE_WIDTH>]");
