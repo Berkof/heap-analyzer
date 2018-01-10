@@ -10,7 +10,10 @@ import org.netbeans.lib.profiler.heap.HeapFactory;
 import org.netbeans.lib.profiler.heap.Instance;
 import org.netbeans.lib.profiler.heap.JavaClass;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,6 +24,11 @@ import java.util.List;
 import java.util.Map;
 
 public class HeapAnalyzer {
+    /**
+     * Calculate statistics for specified classes.
+     */
+    public static final String STAT_CLASSES = "STAT_CLASSES";
+
     /**
      * Top classes count shitch use heap.
      */
@@ -49,6 +57,41 @@ public class HeapAnalyzer {
             throw new IllegalArgumentException("File " + filename + " not a regular file!");
         log("Loading " + filename + "...");
         return HeapFactory.createFastHeap(sFile);
+    }
+
+    public static List<ClassRecord> readBiggestClasses(Heap heap, String pathToClasses) throws IOException {
+        File classesFile  = new File(pathToClasses);
+        if (!classesFile.isFile()) {
+            throw new IllegalArgumentException("Can't read " + pathToClasses);
+        }
+
+        Map<JavaClass, ClassRecord> result = new HashMap<>();
+
+        try (FileReader fileReader = new FileReader(classesFile)) {
+            BufferedReader bufferedReader = new BufferedReader(fileReader);
+
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                JavaClass resultClass = heap.getJavaClassByName(line.trim());
+                if (resultClass == null)
+                    throw new IllegalArgumentException("Can't get class by " + line);
+                result.put(resultClass, new ClassRecord(resultClass));
+            }
+        }
+
+        if (System.getProperty(STAT_CLASSES) != null) {
+            JavaClass tClass;
+            ClassRecord tRecord;
+            for (Instance i : heap.getAllInstances()) {
+                tClass = i.getJavaClass();
+                tRecord = result.get(tClass);
+                if (tRecord != null) {
+                    tRecord.addInstance(i);
+                }
+            }
+        }
+
+        return new ArrayList(result.values());
     }
 
     public static List<ClassRecord> collectBiggestClasses(Heap heap) {
@@ -176,36 +219,47 @@ public class HeapAnalyzer {
     public static void printBiggestClasses(List<ClassRecord> biggestClasses) {
         TextTable tt = new TextTable();
         int n = 0;
-        for(ClassRecord cr: biggestClasses.subList(0, 500)) {
+        for(ClassRecord cr: biggestClasses.subList(0, Math.min(biggestClasses.size(), 500))) {
             tt.addRow("" + (++n), " " + cr.totalSize, " " + cr.instanceCount, " " + cr.jClass.getName());
         }
         System.out.println(tt.formatTextTableUnbordered(1000));
     }
 
     public static void main(String[] args) throws IOException {
-        // org.jetbrains.jps.model.ex.JpsElementContainerImpl
-        // java.util.concurrent.ConcurrentHashMap$Node
 
-        if (args.length < 1 || args.length > 4) {
-            System.out.println("Start with parameters: <path/to/dump> [<BIGGEST_CLASS_TO_ANALYSE> <HOLDING_TREE_HEIGHT> <HOLDING_TREE_WIDTH>]");
+        if (args.length < 1 || args.length > 5) {
+            System.out.println("Start with parameters: <path/to/dump> [<BIGGEST_CLASS_TO_ANALYSE> <HOLDING_TREE_HEIGHT> <HOLDING_TREE_WIDTH>] {<path/to/classes one by line>}");
+            System.out.println("Add -DSTAT_CLASSES with optional parameter <path/to/classes one by line> to get initial statistics for specified classes (need one additional heap scan)");
             System.exit(1);
         }
         String dumppath = args[0];
+        String pathToClasses = null;
+
         if (args.length > 1)
             TOP_CLASS = Integer.parseInt(args[1]);
         if (args.length > 2)
             HOLDING_TREE_HEIGHT = Integer.parseInt(args[2]);
         if (args.length > 3)
             HOLDING_TREE_WIDTH = Integer.parseInt(args[3]);
+        if (args.length > 4)
+            pathToClasses = args[4];
 
         Heap heap = load(dumppath);
         log( "Heap loaded. Searching for biggest classes...");
 
-        List<ClassRecord> biggestClasses = collectBiggestClasses(heap);
+        List<ClassRecord> biggestClasses;
+        if (pathToClasses == null || pathToClasses.isEmpty())
+        {
+            biggestClasses = collectBiggestClasses(heap);
+        } else {
+            biggestClasses = readBiggestClasses(heap, pathToClasses);
+        }
         printBiggestClasses(biggestClasses);
+
         log("Biggest classes collected. Mapping...");
 
         biggestClasses = biggestClasses.subList(0, Math.min(biggestClasses.size(), TOP_CLASS));
+
         Map<PathKey, LongIntHashMap> biggestClassObjects = collectBiggestObjects(heap, biggestClasses);
         log("Biggest classes mapped, search for holding objects...");
         collectResult(biggestClassObjects);
