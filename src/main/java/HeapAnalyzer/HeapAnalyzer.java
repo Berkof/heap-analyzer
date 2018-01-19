@@ -15,6 +15,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -47,6 +49,22 @@ public class HeapAnalyzer {
 
     public static void log(String text) {
         System.out.println(new Date() + " " + text);
+    }
+
+    public static Class<?> objArray = null;
+    public static Method valuesMethod;
+
+    static {
+        try {
+            objArray = Class.forName("org.netbeans.lib.profiler.heap.ObjectArrayDump");
+            valuesMethod = objArray.getMethod("getValues");
+            valuesMethod.setAccessible(true);
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        }
+
     }
 
     public static Heap load(String filename) throws IOException {
@@ -145,6 +163,20 @@ public class HeapAnalyzer {
 
     }
 
+    private static boolean processRef(long tFieldRef, LongIntHashMap maps[], Instance instance, boolean countInstanceSelfSize,
+                                   PathKey paths[], Map<PathKey, LongIntHashMap> resultMap) {
+        boolean result = countInstanceSelfSize;
+        long tHoldedSize;
+        for (int i = 0;i < maps.length;i++) {
+            tHoldedSize = maps[i].get(tFieldRef);
+            if (tHoldedSize > 0L) {
+                addResult (instance, !countInstanceSelfSize, (int)tHoldedSize, paths[i], resultMap);
+                result = true;
+            }
+        }
+        return result;
+    }
+
     public static Map<PathKey, LongIntHashMap> doStep(Heap head, Map<PathKey, LongIntHashMap> prevLvl) {
 
         Map<PathKey, LongIntHashMap> result = new HashMap();
@@ -158,9 +190,9 @@ public class HeapAnalyzer {
             maps[i++] = entry.getValue();
         }
 
-        long tHoldedSize;
         long tFieldRef;
         boolean countInstanceSelfSize;
+
         for (Instance instance : head.getAllInstances()) {
             countInstanceSelfSize = false;
 
@@ -172,15 +204,24 @@ public class HeapAnalyzer {
                         //System.out.println(value);
                         if (value != null) {
                             tFieldRef = Long.valueOf(value);
-                            for (i = 0;i < maps.length;i++) {
-                                tHoldedSize = maps[i].get(tFieldRef);
-                                if (tHoldedSize > 0L) {
-                                    addResult (instance, !countInstanceSelfSize, (int)tHoldedSize, paths[i], result);
-                                    countInstanceSelfSize = true;
-                                }
-                            }
+                            countInstanceSelfSize = processRef(tFieldRef, maps, instance, countInstanceSelfSize, paths,
+                                result);
                         }
                     }
+                }
+            }
+            if (instance.getClass() == objArray) {
+                try {
+                    List<Instance> arrInstances = (List<Instance>)valuesMethod.invoke(instance);
+                    for (Instance arrInstance : arrInstances) {
+                        if (arrInstance != null)
+                            countInstanceSelfSize = processRef(arrInstance.getInstanceId(), maps, instance,
+                                countInstanceSelfSize, paths, result);
+                    }
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                } catch (InvocationTargetException e) {
+                    e.printStackTrace();
                 }
             }
         }
