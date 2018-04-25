@@ -58,6 +58,7 @@ java -Xmx8g -cp heap-analyzer.jar  HeapAnalyzer.HeapAnalyzer /mnt/hd23931.hprof 
 so u can see result after each step and if it's not enought - just wait for next step to complete...
 Btw, speed of heap scanning is about 200Mb for first two scans and about 100Mb for next ones (depend of HOLDING_TREE_WIDTH parameter) on my laptop (i7 and ssd is present).
 
+System property HIST_SIZE lidmit initial class histogram size, default value is 500.
 
 ```
 Wed Nov 29 15:59:49 NOVT 2017 Loading /mnt/ssd/work/gg/FD/FD-5122_memory_consumption/real/hd23931.hprof...

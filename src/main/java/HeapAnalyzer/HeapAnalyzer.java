@@ -12,7 +12,6 @@ import org.netbeans.lib.profiler.heap.JavaClass;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -30,6 +29,11 @@ public class HeapAnalyzer {
      * Calculate statistics for specified classes.
      */
     public static final String STAT_CLASSES = "STAT_CLASSES";
+
+    /**
+     * Size of initial histogram.
+     */
+    public static int HIST_SIZE = Integer.valueOf(System.getProperty("HIST_SIZE","500"));
 
     /**
      * Top classes count shitch use heap.
@@ -260,7 +264,7 @@ public class HeapAnalyzer {
     public static void printBiggestClasses(List<ClassRecord> biggestClasses) {
         TextTable tt = new TextTable();
         int n = 0;
-        for(ClassRecord cr: biggestClasses.subList(0, Math.min(biggestClasses.size(), 500))) {
+        for(ClassRecord cr: biggestClasses.subList(0, Math.min(biggestClasses.size(), HIST_SIZE))) {
             tt.addRow("" + (++n), " " + cr.totalSize, " " + cr.instanceCount, " " + cr.jClass.getName());
         }
         System.out.println(tt.formatTextTableUnbordered(1000));
