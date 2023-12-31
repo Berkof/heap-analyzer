@@ -23,8 +23,7 @@ public class PathKey {
         assert rootClass != null : "Can't create PathRecord with rootClass = null!";
         path = new JavaClass[1+oldPath.path.length];
         path[0] = rootClass;
-        for(int i=0;i < oldPath.path.length;i++)
-            path[i+1] = oldPath.path[i];
+        System.arraycopy(oldPath.path, 0, path, 1, oldPath.path.length);
     }
 
     @Override
