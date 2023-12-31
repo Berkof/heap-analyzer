@@ -65,7 +65,7 @@ public class HistoAnalyzer implements InstanceCallback {
         }
     }
 
-    private Map<JavaClass, ClassRecord> classes = new HashMap();
+    private final Map<JavaClass, ClassRecord> classes = new HashMap<>();
     private RefSet known = null;
 
     public void feed(Instance i) {
