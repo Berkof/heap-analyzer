@@ -19,6 +19,7 @@ public class TextTable {
         List<String[]> nrows = new ArrayList<String[]>();
         for(int i = 0; i != cc; ++i) {
             String[] nrow = new String[cc];
+            // Caution - this loop can be infinite since neither j nor rc are updated within it
             for(int j = 0; j != rc; ++i) {
                 nrow[j] = rows.get(j)[i];
             }
