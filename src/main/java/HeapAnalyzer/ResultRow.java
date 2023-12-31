@@ -9,17 +9,6 @@ public class ResultRow extends PathKey {
     public long size;
     public int count;
 
-    public static final Comparator<ResultRow> BY_SIZE = new Comparator<ResultRow>() {
-
-        public int compare(ResultRow o1, ResultRow o2) {
-            return Long.valueOf(o1.size).compareTo(o2.size);
-        }
-
-        public String toString() {
-            return "BY_SIZE";
-        }
-    };
-
     public static final Comparator<ResultRow> BY_SIZE_DESC = new Comparator<ResultRow>() {
 
         public int compare(ResultRow o1, ResultRow o2) {

@@ -242,8 +242,6 @@ public class HeapAnalyzer {
 
     public static ResultRow[] collectResult (Map<PathKey, LongIntHashMap> lvl) {
 
-        PathKey tPK;
-        LongIntHashMap tEntryMap;
         long tSizeSum;
         ResultRow[] result = new ResultRow[lvl.size()];
         int i = 0;
