@@ -203,7 +203,7 @@ public class HeapAnalyzer {
             List<FieldValue> values = instance.getFieldValues();
             if (values != null) {
                 for (FieldValue fv : values) {
-                    if (fv.getField().getType().getName() == "object") {
+                    if ("object".equals(fv.getField().getType().getName())) {
                         String value = fv.getValue();
                         //System.out.println(value);
                         if (value != null) {
