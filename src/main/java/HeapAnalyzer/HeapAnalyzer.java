@@ -203,7 +203,7 @@ public class HeapAnalyzer {
             List<FieldValue> values = instance.getFieldValues();
             if (values != null) {
                 for (FieldValue fv : values) {
-                    if (fv.getField().getType().getName() == "object") {
+                    if ("object".equals(fv.getField().getType().getName())) {
                         String value = fv.getValue();
                         //System.out.println(value);
                         if (value != null) {
@@ -242,8 +242,6 @@ public class HeapAnalyzer {
 
     public static ResultRow[] collectResult (Map<PathKey, LongIntHashMap> lvl) {
 
-        PathKey tPK;
-        LongIntHashMap tEntryMap;
         long tSizeSum;
         ResultRow[] result = new ResultRow[lvl.size()];
         int i = 0;
